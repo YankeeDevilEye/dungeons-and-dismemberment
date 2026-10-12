@@ -16,9 +16,9 @@
     <link rel="apple-touch-icon" sizes="180x180" href="./icon-180.png" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
-    <script>if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) addEventListener('load', () => navigator.serviceWorker.register('./sw.js').catch(() => {}));</script>
-    <script type="module" crossorigin src="./assets/index-BZVU1xyD.js"></script>
-    <link rel="stylesheet" crossorigin href="./assets/index-iA1G9vzl.css">
+    <script>if ('serviceWorker' in navigator && (location.protocol === 'https:' || location.hostname === 'localhost')) { const had = !!navigator.serviceWorker.controller; let done = false; navigator.serviceWorker.addEventListener('controllerchange', () => { if (had && !done) { done = true; location.reload(); } }); addEventListener('load', () => navigator.serviceWorker.register('./sw.js', { updateViaCache: 'none' }).then((r) => r.update()).catch(() => {})); }</script>
+    <script type="module" crossorigin src="./assets/index-gN4LvFaD.js"></script>
+    <link rel="stylesheet" crossorigin href="./assets/index-ChfivWSw.css">
   </head>
   <body>
     <div id="root"></div>
