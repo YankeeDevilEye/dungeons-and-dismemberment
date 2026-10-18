@@ -178,3 +178,12 @@ html,body,#root,.app-shell{
 }
 @keyframes atmo-pulse{from{opacity:.85}to{opacity:1}}
 .title-card.diablo-frame{z-index:31}
+
+/* === DD PHONE DEFAULTS === */
+.vpad.touch .vpad-btn.face.A{opacity:1}
+.vpad.touch .vpad-dpad.stick{opacity:1}
+.title-card .keys{font-size:11px;line-height:1.45}
+@media (pointer:coarse){
+  .title-card{width:min(520px,100vw - 20px);padding:18px 16px 14px}
+  .title-card .keys{font-size:10.5px}
+}
