@@ -1,6 +1,6 @@
 // Offline cache for Dungeons & Dismemberment (relative paths; works under /<repo>/ on GitHub Pages)
-const CACHE = 'dd-r31h-horror';
-const CORE = ["./","./assets/index-r31h-12391943.css","./assets/index-r31h-bda0e0e7.js","./icon-180.png","./icon-192.png","./icon-512.png","./icon-maskable-512.png","./icon.svg","./index.html","./manifest.webmanifest"]; // voice clips: cached on first play
+const CACHE = 'dd-r31a-arcade';
+const CORE = ["./","./assets/index-r31a-aab91720.css","./assets/index-r31a-ac386456.js","./icon-180.png","./icon-192.png","./icon-512.png","./icon-maskable-512.png","./icon.svg","./index.html","./manifest.webmanifest"]; // voice clips: cached on first play
 self.addEventListener('install', (e) => { e.waitUntil(caches.open(CACHE).then((c) => c.addAll(CORE)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', (e) => { e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k.startsWith('dd-') && k !== CACHE).map((k) => caches.delete(k)))).then(() => self.clients.claim())); });
 self.addEventListener('fetch', (e) => {
