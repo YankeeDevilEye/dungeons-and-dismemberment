@@ -423,3 +423,25 @@ html,body,#root,.app-shell{
 @media (prefers-reduced-motion:reduce){
   .insert-coin{animation:none}
 }
+
+
+/* === DD GROSS LEVELS r32 === */
+.game-canvas{
+  filter:saturate(1.22) contrast(1.12) brightness(.94) hue-rotate(-8deg) !important;
+}
+.app-shell:after{
+  background:
+    radial-gradient(ellipse 70% 60% at 50% 40%, transparent 35%, rgba(40,10,6,.62) 100%),
+    radial-gradient(ellipse 50% 40% at 80% 85%, rgba(60,80,10,.18), transparent 55%) !important;
+}
+.title-atmo{
+  background:
+    radial-gradient(ellipse 72% 58% at 50% 26%, rgba(140,30,20,.7), transparent 64%),
+    radial-gradient(ellipse 48% 38% at 16% 78%, rgba(90,110,20,.22), transparent 55%),
+    radial-gradient(ellipse 42% 34% at 88% 72%, rgba(80,20,10,.4), transparent 52%),
+    linear-gradient(180deg, rgba(12,4,4,.3) 0%, rgba(6,2,2,.7) 55%, rgba(2,0,0,.92) 100%) !important;
+}
+.toast{
+  border-color:rgba(140,90,30,.45) !important;
+  background:linear-gradient(180deg,rgba(48,24,12,.95),rgba(12,6,4,.97)) !important;
+}
