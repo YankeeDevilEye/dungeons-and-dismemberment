@@ -1,7 +1,7 @@
 {
   "name": "Dungeons & Dismemberment",
   "short_name": "Dismemberment",
-  "description": "A Gauntlet-style dungeon brawler with an axe, gibs and bad jokes.",
+  "description": "Private adult Gauntlet crawl - bile, cysts, abattoirs, and bad decisions.",
   "start_url": "./",
   "scope": "./",
   "display": "fullscreen",

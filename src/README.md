@@ -1,0 +1,28 @@
+# Editable source for Dungeons & Dismemberment
+
+This repo ships a Vite-built game on `gh-pages`. The original app source is not in git; the playable core lives in `src/base-bundle.js` (snapshot of the last known-good r32 build).
+
+**Edit here, not the minified file by hand:**
+
+| Path | Purpose |
+| --- | --- |
+| `src/base-bundle.js` / `src/base-bundle.css` | Frozen game core (r32) |
+| `src/patches/build.py` | Applies playability / fantasy / combat patches |
+| `src/patches/dd-taunts-block.js` | Enemy spot/swing/death taunts + TTS |
+| `src/patches/draw-64bit.js` | 640×480 world buffer upscale |
+| `src/overlays/r33-polish.css` | Title, pad, fantasy, readability CSS |
+| `src/config/copy.json` | Title / select marketing copy |
+
+## Build
+
+```bash
+python3 src/patches/build.py
+```
+
+Writes hashed assets under `assets/`, and updates `index.html`, `sw.js`, and `manifest.webmanifest`.
+
+Serve locally:
+
+```bash
+python3 -m http.server 8765
+```
