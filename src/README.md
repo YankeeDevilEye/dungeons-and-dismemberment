@@ -7,10 +7,11 @@ This repo ships a Vite-built game on `gh-pages`. The original app source is not 
 | Path | Purpose |
 | --- | --- |
 | `src/base-bundle.js` / `src/base-bundle.css` | Frozen game core (r32) |
-| `src/patches/build.py` | Applies r33 polish + r34 Ascension patches |
+| `src/patches/build.py` | Applies r33–r35 patches |
 | `src/patches/dd-taunts-block.js` | Enemy spot/swing/death taunts + TTS |
 | `src/patches/draw-64bit.js` | 640×480 world buffer upscale |
 | `src/overlays/r34-awesome.css` | Title, pad, fantasy, blood-heat CSS |
+| `src/overlays/r35-feel.css` | Flesh & Thunder look pass |
 | `src/config/copy.json` | Title / select marketing copy |
 
 ## Build

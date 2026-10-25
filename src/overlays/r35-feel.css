@@ -1,0 +1,182 @@
+/* r35 — Flesh & Thunder: look sharper, heat clearer, brand louder */
+
+:root {
+  --r35-blood: #c82028;
+  --r35-bile: #7a8a30;
+  --r35-wet: #1a3040;
+  --r35-brand: #f0d080;
+  --r35-ink: #060204;
+}
+
+/* Atmosphere: wet abattoir plane behind the crawl */
+.app-shell {
+  background:
+    radial-gradient(ellipse 90% 70% at 50% 8%, rgba(140, 24, 28, 0.5), transparent 58%),
+    radial-gradient(ellipse 55% 45% at 12% 88%, rgba(90, 110, 40, 0.22), transparent 50%),
+    radial-gradient(ellipse 50% 40% at 92% 78%, rgba(30, 50, 70, 0.28), transparent 48%),
+    linear-gradient(180deg, #14080a 0%, #080406 45%, #030102 100%) !important;
+}
+
+.app-shell:after {
+  background:
+    radial-gradient(ellipse 70% 60% at 50% 42%, transparent 35%, rgba(0, 0, 0, 0.62) 100%),
+    linear-gradient(180deg, rgba(20, 4, 6, 0.15), transparent 30%, rgba(0, 0, 0, 0.35));
+}
+
+.game-canvas {
+  filter: contrast(1.1) saturate(1.02) brightness(0.97);
+}
+
+/* Low HP — pulse the world so you feel the knife */
+.app-shell.low-hp .game-canvas {
+  animation: low-hp-pulse 0.85s ease-in-out infinite alternate;
+  filter: contrast(1.14) saturate(1.12) brightness(0.9)
+    drop-shadow(0 0 16px rgba(180, 20, 30, 0.45));
+}
+.app-shell.low-hp:before {
+  opacity: 0.34;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .55 0 0 0 0 .05 0 0 0 0 .05 0 0 0 .55 0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+.app-shell.blood-hot .game-canvas {
+  filter: contrast(1.12) saturate(1.1) brightness(1.02)
+    drop-shadow(0 0 14px rgba(180, 40, 30, 0.4));
+  animation: blood-heat 0.7s ease-in-out infinite alternate;
+}
+
+/* Brand-first title — one composition */
+.title-card {
+  width: min(460px, calc(100% - 20px));
+  padding: 34px 26px 24px;
+  border: 1px solid #9a5830;
+  background:
+    radial-gradient(ellipse at 50% -15%, rgba(200, 48, 36, 0.55), transparent 52%),
+    radial-gradient(ellipse at 85% 110%, rgba(90, 110, 40, 0.2), transparent 42%),
+    linear-gradient(168deg, #221210 0%, #0c0606 52%, #040203 100%);
+  box-shadow:
+    0 0 0 1px #12060888,
+    0 28px 56px #000000b8,
+    inset 0 1px #f0d08028,
+    0 0 80px rgba(140, 24, 28, 0.28);
+}
+.title-card h1,
+.title-card .brand,
+.title-card .arcade-title,
+.title-card .diablo-title {
+  font-size: clamp(1.7rem, 4.6vw, 2.35rem) !important;
+  letter-spacing: 0.14em !important;
+  background: linear-gradient(
+    180deg,
+    #fff6e0 0%,
+    #f0d080 32%,
+    #e05030 72%,
+    #5a100c 100%
+  );
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent !important;
+  filter: drop-shadow(0 2px #0a0406) drop-shadow(0 0 22px #a0202080);
+  animation: brand-glow 3.2s ease-in-out infinite;
+}
+.title-card .sub {
+  color: rgba(255, 170, 150, 0.92);
+  font-size: 1.1rem;
+  max-width: 26ch;
+}
+.title-card .blurb {
+  color: rgba(236, 216, 198, 0.82);
+  max-width: 32ch;
+  font-size: 0.98rem;
+}
+.title-card .start,
+.title-card .insert-coin {
+  letter-spacing: 0.14em;
+  color: #ffe08a !important;
+}
+
+.app-shell:has(.title-card) .title-atmo {
+  background:
+    radial-gradient(ellipse at 50% 32%, rgba(160, 28, 28, 0.62), transparent 54%),
+    radial-gradient(ellipse at 14% 86%, rgba(100, 120, 36, 0.28), transparent 44%),
+    radial-gradient(ellipse at 88% 72%, rgba(36, 60, 80, 0.32), transparent 40%),
+    #050203;
+  animation: atmo-breathe 7s ease-in-out infinite;
+}
+
+/* Select ritual */
+.diablo-select {
+  background:
+    radial-gradient(at 50% 22%, rgba(140, 24, 28, 0.55), transparent 56%),
+    radial-gradient(at 8% 92%, rgba(90, 110, 40, 0.18), transparent 42%),
+    #050306b0;
+}
+.descend-btn {
+  letter-spacing: 0.16em;
+  box-shadow:
+    inset 0 1px #ffe6a066,
+    inset 0 -2px #00000080,
+    0 4px #0c080a,
+    0 0 28px rgba(180, 40, 30, 0.55);
+  transition: transform 0.12s ease, box-shadow 0.15s ease, filter 0.15s ease;
+}
+.descend-btn:hover {
+  filter: brightness(1.08);
+  box-shadow:
+    inset 0 1px #ffe6a080,
+    0 4px #0c080a,
+    0 0 36px rgba(220, 80, 40, 0.7);
+}
+
+/* Pad — clearer primary face */
+.vpad.arcade-primary.touch .vpad-btn.face.A {
+  border-width: 3px;
+  border-color: #ff9a78f2;
+  background: radial-gradient(circle at 40% 35%, #ff967866, #78141444);
+  box-shadow: 0 0 0 1px #00000099, 0 0 18px #ff6a3c55, inset 0 0 14px #ffffff22;
+}
+.vpad.arcade-primary .vpad-dpad.stick.on {
+  border-color: #ffd68cf2;
+  box-shadow: 0 0 20px #ffbe6e99, inset 0 0 18px #00000066;
+}
+
+/* Subtitles punch */
+.hero-subs span {
+  border-color: #c858308c;
+  background: linear-gradient(#120404d8, #280808c0);
+  box-shadow: 0 4px 20px #000000a0, 0 0 16px #ff503033;
+  font-size: 18px;
+}
+
+/* Toast / over card polish */
+.toast {
+  border-color: #c87840;
+  box-shadow: inset 0 1px #d4a84a44, 0 4px #0c080a, 0 0 24px #98142866;
+}
+.over-card h1 {
+  letter-spacing: 0.16em;
+}
+
+.build-tag::after {
+  content: " · r35 flesh & thunder";
+}
+
+@keyframes low-hp-pulse {
+  from {
+    filter: contrast(1.1) saturate(1.05) brightness(0.94)
+      drop-shadow(0 0 10px rgba(160, 16, 24, 0.35));
+  }
+  to {
+    filter: contrast(1.16) saturate(1.18) brightness(0.86)
+      drop-shadow(0 0 22px rgba(220, 24, 36, 0.55));
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-shell.low-hp .game-canvas,
+  .app-shell.blood-hot .game-canvas,
+  .app-shell:has(.title-card) .title-atmo,
+  .title-card h1,
+  .title-card .brand {
+    animation: none !important;
+  }
+}
