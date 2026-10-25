@@ -1,5 +1,8 @@
 #!/usr/bin/env python3
-"""Apply r33 play-polish patches onto the frozen r32 base bundle."""
+"""Apply r33–r35 patches onto the frozen r32 base bundle.
+
+r33 play-polish · r34 Abattoir Ascension · r35 Flesh & Thunder
+"""
 from __future__ import annotations
 
 import hashlib
@@ -10,7 +13,7 @@ ROOT = Path(__file__).resolve().parents[2]
 SRC = ROOT / "src"
 PATCHES = SRC / "patches"
 ASSETS = ROOT / "assets"
-BUILD_ID = "r33p"
+BUILD_ID = "r35f"
 
 PAD_MORE_JS = """\
 (function () {
@@ -46,6 +49,20 @@ PAD_MORE_JS = """\
 })();
 """
 
+BLOOD_METER_JS = (
+    "t.phase===`play`&&t.killStreak>=2&&(function(e,t,n,r){"
+    "let k=t.killStreak|0,w=Math.min(1,(t.streakT||0)/3.1),x=n/2,y=r-26,bw=152,fill=Math.min(1,k/30)*w;"
+    "e.save();e.globalAlpha=.9;"
+    "e.fillStyle=`rgba(8,3,4,0.62)`;e.fillRect(x-bw/2,y-9,bw,9);"
+    "e.fillStyle=k>=20?`#ff5a2a`:k>=10?`#ff9a4a`:`#e8c070`;"
+    "e.fillRect(x-bw/2,y-9,bw*fill,9);"
+    "e.strokeStyle=`rgba(255,220,160,0.35)`;e.strokeRect(x-bw/2+.5,y-8.5,bw-1,8);"
+    "e.font=`700 10px Cinzel, Georgia, serif`;e.fillStyle=`#ffe8c0`;"
+    "e.fillText((k>=10?`BLOOD MOMENTUM `:`SLAUGHTER `)+k+`×`,x,y-14);"
+    "e.restore()"
+    "})(e,t,n,r),"
+)
+
 
 def sha8(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()[:8]
@@ -61,12 +78,17 @@ def main() -> None:
     js = (SRC / "base-bundle.js").read_text(encoding="utf-8", errors="ignore")
     css = (SRC / "base-bundle.css").read_text(encoding="utf-8", errors="ignore")
     copy = json.loads((SRC / "config" / "copy.json").read_text())
-    overlay = (SRC / "overlays" / "r33-polish.css").read_text()
+    overlay = (
+        (SRC / "overlays" / "r34-awesome.css").read_text()
+        + "\n\n"
+        + (SRC / "overlays" / "r35-feel.css").read_text()
+    )
     draw64 = (PATCHES / "draw-64bit.js").read_text().strip()
     taunts = (PATCHES / "dd-taunts-block.js").read_text().strip()
 
     import re
 
+    # --- r33: 64-bit world buffer ---
     m = re.search(
         r"draw\(e,t,n,r,i,a,o\)\{if\(this\.cssW=n,this\.cssH=r,p\.mobile\).*?"
         r"this\.fpsT>=\.5&&\(this\.fps=this\.fpsN/this\.fpsT,this\.fpsN=0,this\.fpsT=0\)\}",
@@ -77,6 +99,7 @@ def main() -> None:
         raise SystemExit("patch failed: r32 draw() not found")
     js = js[: m.start()] + draw64 + js[m.end() :]
 
+    # --- r33: enemy taunts ---
     old_bark = "barkAt(e,t){let n=this.hero;j.bark(e.kind,t,(e.x-n.x)/420,Math.hypot(e.x-n.x,e.y-n.y))}"
     new_bark = (
         "barkAt(e,t){let n=this.hero;j.bark(e.kind,t,(e.x-n.x)/420,Math.hypot(e.x-n.x,e.y-n.y)),"
@@ -92,6 +115,7 @@ def main() -> None:
     else:
         js = replace_once(js, mount, mount + taunts, "inject taunts")
 
+    # --- r33/r34: marketing copy ---
     js = replace_once(
         js,
         "Arcade sins. Gauntlet body count. Something still screaming.",
@@ -148,6 +172,7 @@ def main() -> None:
         "arcade-primary class",
     )
 
+    # --- r33: combat readability (lower gore) ---
     js = replace_once(js, "goreK=1;", "goreK=.55;", "goreK field init")
     js = replace_once(js, "this.goreK=1,", "this.goreK=.55,", "goreK reset")
     js = replace_once(js, "mc=420", "mc=260", "gib cap")
@@ -169,10 +194,236 @@ def main() -> None:
     )
     js = replace_once(js, old_enemy, new_enemy, "enemy silhouette")
 
-    if "build-tag" in js:
-        js = js.replace("r32g", "r33p", 1)
+    # ========== r34 Abattoir Ascension ==========
 
-    out_css = css + "\n\n/* === r33 polish overlay === */\n" + overlay
+    # Mid-tier fodder a bit meatier (still Gauntlet-poppable)
+    for old, new, label in [
+        ("wretch:{hp:1,speed:78,dmg:14", "wretch:{hp:2,speed:78,dmg:14", "wretch hp"),
+        ("grunt:{hp:4,speed:64,dmg:14", "grunt:{hp:6,speed:66,dmg:15", "grunt hp"),
+        ("imp:{hp:2,speed:64,dmg:12", "imp:{hp:3,speed:68,dmg:13", "imp hp"),
+        ("skeleton:{hp:4,speed:88,dmg:14", "skeleton:{hp:6,speed:90,dmg:15", "skeleton hp"),
+        ("legion:{hp:5,speed:82,dmg:12", "legion:{hp:8,speed:84,dmg:14", "legion hp"),
+        ("banshee:{hp:9,speed:80,dmg:24", "banshee:{hp:12,speed:82,dmg:25", "banshee hp"),
+        ("brute:{hp:10,speed:50,dmg:26", "brute:{hp:14,speed:52,dmg:27", "brute hp"),
+        ("drown:{hp:36,speed:48,dmg:20", "drown:{hp:40,speed:50,dmg:21", "drown hp"),
+        ("abom:{hp:48,speed:52,dmg:22", "abom:{hp:54,speed:53,dmg:23", "abom hp"),
+    ]:
+        js = replace_once(js, old, new, label)
+
+    # Floor scaling: slightly tougher bodies, softer late contact spikes
+    js = replace_once(
+        js,
+        "s=Math.ceil((a.hp+r+Math.floor(o/3))*(1+o*.05)*1.4),c={id:this.nextId++,kind:e,x:t,y:n,r:a.r,hp:s,maxHp:s,speed:a.speed*(1+Math.min(.5,o*.06))*q(.9,1.1),dmg:Math.round(a.dmg*(1+o*.08)*1.15)",
+        "s=Math.ceil((a.hp+r+Math.floor(o/3))*(1+o*.055)*1.5),c={id:this.nextId++,kind:e,x:t,y:n,r:a.r,hp:s,maxHp:s,speed:a.speed*(1+Math.min(.45,o*.055))*q(.9,1.1),dmg:Math.round(a.dmg*(1+Math.min(14,o)*.055+Math.max(0,o-14)*.03)*1.12)",
+        "spawn scale",
+    )
+
+    # Hunger: a hair gentler early so momentum can cook
+    js = replace_once(
+        js,
+        "this.god||(n.hp-=(.9+r*.14)*i.drainMul*e,",
+        "this.god||(n.hp-=(.82+r*.125)*i.drainMul*e,",
+        "hunger drain",
+    )
+
+    # Blood Momentum: mods() cache bust + power curve from kill streak
+    js = replace_once(
+        js,
+        "if(n&&n.t===this.time&&n.hp===t)return n.m;",
+        "if(n&&n.t===this.time&&n.hp===t&&n.streak===this.killStreak)return n.m;",
+        "mods cache streak",
+    )
+    js = replace_once(
+        js,
+        "rs(this,r),r.poison+=r.venom,this.modsCache={t:this.time,hp:t,m:r},r}",
+        "rs(this,r),r.poison+=r.venom,"
+        "(function(g,m){let k=g.killStreak|0;if(k<3)return;let p=Math.min(1,(k-2)/20);"
+        "m.meleeMul*=1+.1+p*.28;m.attackSpeedMul*=1+.08+p*.22;m.speedMul*=1+.05+p*.14;"
+        "m.lifesteal+=.012+p*.045;m.dmgTakenMul*=1-Math.min(.14,p*.14);"
+        "k>=10&&(m.drainMul*=.9);k>=20&&(m.meleeMul*=1.1,m.attackSpeedMul*=1.06);"
+        "})(this,r),this.modsCache={t:this.time,hp:t,streak:this.killStreak,m:r},r}",
+        "blood momentum mods",
+    )
+
+    # Longer streak window — momentum is the fantasy
+    js = replace_once(
+        js,
+        "this.killStreak++,this.streakT=2.2,this.stats.maxCombo=Math.max(this.stats.maxCombo,this.killStreak)",
+        "this.killStreak++,this.streakT=3.1,this.stats.maxCombo=Math.max(this.stats.maxCombo,this.killStreak)",
+        "streak window",
+    )
+
+    # Earlier / juicier streak callouts
+    js = replace_once(
+        js,
+        "let u=[[15,`KILLING SPREE`,`15 dead`],[30,`RAMPAGE`,`30 dead · the floor shakes`],[60,`UNSTOPPABLE`,`60 dead`],[100,`GODLIKE`,`100 dead`],[200,`ENDLESS CARNAGE`,`200 dead · they keep coming`]].find(([e])=>e===this.killStreak);",
+        "let u=[[5,`BLOOD MOMENTUM`,`keep swinging`],[10,`ABATTOIR FLOW`,`don't stop`],[15,`KILLING SPREE`,`15 dead`],[30,`RAMPAGE`,`30 dead · the floor shakes`],[60,`UNSTOPPABLE`,`60 dead`],[100,`GODLIKE`,`100 dead`],[200,`ENDLESS CARNAGE`,`200 dead · they keep coming`]].find(([e])=>e===this.killStreak);",
+        "streak callouts",
+    )
+
+    # Snappier hit juice (readable, not gore)
+    js = replace_once(
+        js,
+        "o!==`magic`&&o!==`aura`&&o!==`dot`&&(this.hitstop=Math.max(this.hitstop,a?.085:.04),this.shake=Math.max(this.shake,a?7:3),j.hit(a)",
+        "o!==`magic`&&o!==`aura`&&o!==`dot`&&(this.hitstop=Math.max(this.hitstop,a?.1:.05),this.shake=Math.max(this.shake,a?9:4),j.hit(a)",
+        "hit juice",
+    )
+
+    # Generator smash fuels the streak — smash nurseries, ride the blood
+    js = replace_once(
+        js,
+        "e.hp<=0){e.dead=!0,this.stats.gens++;let t=100*Math.ceil(e.maxHp/4);this.score+=t,this.gainXp(40+e.maxHp*4);",
+        "e.hp<=0){e.dead=!0,this.stats.gens++;"
+        "this.killStreak=Math.max(this.killStreak,8),this.streakT=Math.max(this.streakT,3.8),"
+        "this.hero&&(this.hero.inv=Math.max(this.hero.inv||0,.5),"
+        "this.hero.hp=Math.min(this.hero.maxHp,this.hero.hp+this.hero.maxHp*.05));"
+        "let t=100*Math.ceil(e.maxHp/4);this.score+=t,this.gainXp(40+e.maxHp*4);",
+        "gen momentum reward",
+    )
+    js = replace_once(
+        js,
+        "this.callout(`GENERATOR DESTROYED`,`+${t}`,`#ffb04a`);",
+        "this.callout(`NURSERY SILENCED`,`+${t} · blood surges`,`#ffb04a`);",
+        "gen callout",
+    )
+
+    # Blood meter HUD + DOM heat class
+    js = replace_once(
+        js,
+        "drawHud(e,t,n,r){if(e.save(),e.textAlign=`center`,t.banner&&",
+        "drawHud(e,t,n,r){if(e.save(),e.textAlign=`center`," + BLOOD_METER_JS + "t.banner&&",
+        "blood meter hud",
+    )
+    js = replace_once(
+        js,
+        "this.streakT>0&&(this.streakT-=e,this.streakT<=0&&(this.killStreak=0));",
+        "this.streakT>0&&(this.streakT-=e,this.streakT<=0&&(this.killStreak=0));"
+        "try{let _s=document.querySelector(`.app-shell`);_s&&_s.classList.toggle(`blood-hot`,(this.killStreak|0)>=8)}catch(_e){}",
+        "blood-hot class",
+    )
+
+    # ========== r35 Flesh & Thunder ==========
+
+    # Floating damage numbers — combat readability
+    js = replace_once(
+        js,
+        "e.hp-=c,a&&o===`melee`&&c>=e.maxHp*.5&&e.hp>-e.maxHp&&this.hv(`crit`),",
+        "e.hp-=c,"
+        "o!==`dot`&&o!==`aura`&&c>=1&&this.text(e.x+q(-5,5),e.y-12-q(0,10),"
+        "`${Math.max(1,Math.round(c))}`,a?`#ffe08a`:c>=20?`#ffb070`:`#f0e6d0`,a?15:c>=20?13:11,a?.95:.55),"
+        "a&&o===`melee`&&c>=e.maxHp*.5&&e.hp>-e.maxHp&&this.hv(`crit`),",
+        "damage numbers",
+    )
+
+    # Full-roll i-frames (was cutting early at .28 of .34)
+    js = replace_once(
+        js,
+        "if(i.roll&&i.roll.t<.28){Math.random()<.45&&(this.text(i.x,i.y-16,`ROLL`,`#7cb4ff`,11,.55),this.sparks(i.x,i.y,8,`#7cb4ff`));return}",
+        "if(i.roll&&i.roll.t<.36){Math.random()<.55&&(this.text(i.x,i.y-16,`ROLL`,`#7cb4ff`,12,.6),this.sparks(i.x,i.y,10,`#7cb4ff`));return}",
+        "roll iframes",
+    )
+
+    # Snappier dodge roll
+    js = replace_once(
+        js,
+        "n.roll.t+=e;let t=1-n.roll.t/.34,r=1+(i.whirlSpins>1?.2*(i.whirlSpins-1):0);_=n.roll.dx*320*r*Math.max(.3,t),v=n.roll.dy*320*r*Math.max(.3,t),n.roll.t>=.34&&(n.roll=null,n.rollCd=.12*i.rollCdMul)",
+        "n.roll.t+=e;let t=1-n.roll.t/.32,r=1+(i.whirlSpins>1?.2*(i.whirlSpins-1):0);_=n.roll.dx*360*r*Math.max(.35,t),v=n.roll.dy*360*r*Math.max(.35,t),n.roll.t>=.32&&(n.roll=null,n.rollCd=.1*i.rollCdMul)",
+        "roll speed",
+    )
+
+    # Wider aim assist
+    js = replace_once(
+        js,
+        "assistTarget(e,t,n){let r=this.hero,i=null,a=1/0,o=null,s=1/0,c=t?.85:.96,",
+        "assistTarget(e,t,n){let r=this.hero,i=null,a=1/0,o=null,s=1/0,c=t?1.05:1.2,",
+        "assist cone",
+    )
+    js = replace_once(
+        js,
+        "assistTarget(o.x||o.y?Math.atan2(o.y,o.x):n.face,!!(o.x||o.y),d.some(Boolean)||f&&n.rskill!==`heavy`?260:sc.l1.reach+i.reachAdd+46)",
+        "assistTarget(o.x||o.y?Math.atan2(o.y,o.x):n.face,!!(o.x||o.y),d.some(Boolean)||f&&n.rskill!==`heavy`?360:sc.l1.reach+i.reachAdd+72)",
+        "assist range",
+    )
+
+    # Magnet pickup
+    js = replace_once(
+        js,
+        "for(let e of this.items)e.taken||Math.hypot(e.x-n.x,e.y-n.y)<n.r+11&&this.pickup(e);for(let e of this.loot)if(!(e.taken||e.z>1)){if(Math.hypot(e.x-n.x,e.y-n.y)>n.r+10){",
+        "for(let e of this.items)e.taken||Math.hypot(e.x-n.x,e.y-n.y)<n.r+18&&this.pickup(e);for(let e of this.loot)if(!(e.taken||e.z>1)){if(Math.hypot(e.x-n.x,e.y-n.y)>n.r+16){",
+        "pickup magnet",
+    )
+
+    # Snappier class move speeds (~8%)
+    for old, new, label in [
+        ("speed:132,melee:1.2,reach:4,pots:1", "speed:144,melee:1.2,reach:4,pots:1", "barb speed"),
+        ("speed:156,melee:.9,reach:0,pots:2", "speed:168,melee:.9,reach:0,pots:2", "ama speed"),
+        ("speed:140,melee:.58,reach:-4,pots:4", "speed:152,melee:.58,reach:-4,pots:4", "sorc speed"),
+        ("speed:128,melee:1.1,reach:2,pots:2", "speed:140,melee:1.1,reach:2,pots:2", "pal speed"),
+        ("speed:136,melee:.8,reach:0,pots:3", "speed:148,melee:.8,reach:0,pots:3", "nec speed"),
+    ]:
+        js = replace_once(js, old, new, label)
+
+    # Audio mix — SFX punch through, music sits under
+    js = replace_once(
+        js,
+        "vol={master:.85,music:.48,sfx:.98}",
+        "vol={master:.9,music:.32,sfx:1}",
+        "default mix",
+    )
+
+    # Meatier hit / swing / splat
+    js = replace_once(
+        js,
+        "hit(e=!1){if(!this.ok(`hit`,.028))return;let t=this.t,n=O(.88,1.12);this.thump(t,(e?150:210)*n,45,e?.22:.1,e?.5:.32),this.nz(t,e?.14:.07,`lowpass`,2600*n,260,1,e?.32:.22),this.click(t,O(900,1500),2,e?.16:.1,.018),e&&this.boneSnap()}",
+        "hit(e=!1){if(!this.ok(`hit`,.022))return;let t=this.t,n=O(.88,1.12);this.thump(t,(e?125:185)*n,58,e?.3:.15,e?.68:.44),this.nz(t,e?.2:.11,`lowpass`,2100*n,200,1.35,e?.42:.3),this.click(t,O(750,1350),3,e?.22:.14,.022),e&&(this.boneSnap(),this.duck(.09)),!e&&this.duck(.045)}",
+        "meaty hits",
+    )
+    js = replace_once(
+        js,
+        "swing(e=!1){if(!this.ok(`swing`,.05))return;let t=this.t,n=O(.9,1.1);this.nz(t,e?.3:.15,`bandpass`,(e?420:1300)*n,(e?2e3:3800)*n,1.6,e?.36:.24,void 0,e?.06:.03),e&&this.tone(t,.3,`sawtooth`,70,45,.06)}",
+        "swing(e=!1){if(!this.ok(`swing`,.04))return;let t=this.t,n=O(.9,1.1);this.nz(t,e?.36:.2,`bandpass`,(e?380:1200)*n,(e?2200:4e3)*n,1.75,e?.42:.3,void 0,e?.07:.04),e&&this.tone(t,.34,`sawtooth`,65,42,.08)}",
+        "meaty swings",
+    )
+    js = replace_once(
+        js,
+        "splat(e=1){if(!this.ok(`splat`,.03))return;let t=this.t,n=O(.88,1.15);this.thump(t,105*n-e*14,28,.24+e*.08,.55+e*.12),this.nz(t,.28+e*.14,`lowpass`,1800*n,110,4,.42+e*.08),this.nz(t+.012,.2+e*.1,`bandpass`,780*n,220,8,.34),this.nz(t+.04,.16,`bandpass`,420*n,700,10,.18)",
+        "splat(e=1){if(!this.ok(`splat`,.025))return;this.duck(.07+e*.04);let t=this.t,n=O(.88,1.15);this.thump(t,95*n-e*12,36,.3+e*.1,.68+e*.14),this.nz(t,.34+e*.16,`lowpass`,1600*n,100,4.5,.5+e*.1),this.nz(t+.01,.24+e*.12,`bandpass`,720*n,200,8,.4),this.nz(t+.035,.18,`bandpass`,400*n,650,10,.22)",
+        "meaty splat",
+    )
+
+    # Snappier hit juice on top of r34
+    js = replace_once(
+        js,
+        "o!==`magic`&&o!==`aura`&&o!==`dot`&&(this.hitstop=Math.max(this.hitstop,a?.1:.05),this.shake=Math.max(this.shake,a?9:4),j.hit(a)",
+        "o!==`magic`&&o!==`aura`&&o!==`dot`&&(this.hitstop=Math.max(this.hitstop,a?.12:.055),this.shake=Math.max(this.shake,a?11:5),j.hit(a)",
+        "r35 hit juice",
+    )
+
+    # Low-HP DOM heat (with blood-hot)
+    js = replace_once(
+        js,
+        "try{let _s=document.querySelector(`.app-shell`);_s&&_s.classList.toggle(`blood-hot`,(this.killStreak|0)>=8)}catch(_e){}",
+        "try{let _s=document.querySelector(`.app-shell`);if(_s){_s.classList.toggle(`blood-hot`,(this.killStreak|0)>=8);"
+        "let _h=this.hero;_s.classList.toggle(`low-hp`,!!(_h&&_h.maxHp>0&&_h.hp/_h.maxHp<.32&&this.phase===`play`))}}catch(_e){}",
+        "low-hp class",
+    )
+
+    # Enemy heat feeds music intensity via streak
+    js = replace_once(
+        js,
+        "setEnemyHeat(e){this.gs.heat=e,this.enemyHeat=e}",
+        "setEnemyHeat(e){this.gs.heat=Math.max(e,(this.killStreak|0)>=8?Math.min(1,.35+(this.killStreak|0)*.02):e),this.enemyHeat=this.gs.heat}",
+        "streak heat music",
+    )
+
+    if "build-tag" in js:
+        js = (
+            js.replace("r32g", BUILD_ID, 1)
+            .replace("r33p", BUILD_ID, 1)
+            .replace("r34a", BUILD_ID, 1)
+        )
+
+    out_css = css + "\n\n/* === r34/r35 flesh & thunder === */\n" + overlay
     out_js = js
 
     js_hash = sha8(out_js.encode())
@@ -198,7 +449,7 @@ def main() -> None:
     <meta name="theme-color" content="#12060a" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content="Dismemberment" />
-    <meta name="description" content="Dungeons &amp; Dismemberment: private adult Gauntlet crawl — bile culverts, cyst nurseries, abattoir floors." />
+    <meta name="description" content="Dungeons &amp; Dismemberment: private adult Gauntlet crawl — flesh, thunder, blood momentum." />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@500;700;900&family=IM+Fell+English:ital@0;1&family=Press+Start+2P&display=swap" rel="stylesheet" />
@@ -221,7 +472,7 @@ def main() -> None:
     (ROOT / "index.html").write_text(html, encoding="utf-8")
 
     sw = f"""// Offline cache for Dungeons & Dismemberment (relative paths; works under /<repo>/ on GitHub Pages)
-const CACHE = 'dd-{BUILD_ID}-polish';
+const CACHE = 'dd-{BUILD_ID}-thunder';
 const CORE = ["./","./assets/{css_name}","./assets/{js_name}","./assets/pad-more.js","./icon-180.png","./icon-192.png","./icon-512.png","./icon-maskable-512.png","./icon.svg","./index.html","./manifest.webmanifest"]; // voice clips: cached on first play
 self.addEventListener('install', (e) => {{ e.waitUntil(caches.open(CACHE).then((c) => c.addAll(CORE)).then(() => self.skipWaiting())); }});
 self.addEventListener('activate', (e) => {{ e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k.startsWith('dd-') && k !== CACHE).map((k) => caches.delete(k)))).then(() => self.clients.claim())); }});
@@ -243,7 +494,7 @@ self.addEventListener('fetch', (e) => {{
     manifest = {
         "name": "Dungeons & Dismemberment",
         "short_name": "Dismemberment",
-        "description": "Private adult Gauntlet crawl - bile, cysts, abattoirs, and bad decisions.",
+        "description": "Private adult Gauntlet crawl — flesh, thunder, blood momentum.",
         "start_url": "./",
         "scope": "./",
         "display": "fullscreen",
@@ -269,18 +520,81 @@ self.addEventListener('fetch', (e) => {{
     (ROOT / "README.md").write_text(
         """# Dungeons & Dismemberment
 
-Playable GitHub Pages build of an adult Gauntlet-style dungeon crawler.
+Playable GitHub Pages build of an adult Gauntlet-style dungeon crawler (**r35 Flesh & Thunder**).
 
-- **Play:** open this branch / Pages site
-- **Edit:** see [`src/README.md`](src/README.md) - patches + overlays are the source of truth
+- **Play:** open this branch / Pages site (`?desktop=1` on desktop)
+- **Edit:** see [`src/README.md`](src/README.md) — patches + overlays are the source of truth
 - **Build:** `python3 src/patches/build.py`
+
+## r35 highlights
+
+- **Look** — wetter abattoir chrome, low-HP pulse, louder brand on title
+- **Sound** — SFX-forward mix, meatier hits/swings/splats, music ducks under impact
+- **Play** — floating damage numbers, full-roll i-frames, wider aim assist, magnet loot, snappier movers
+- Keeps **r34 Blood Momentum** (streak power + nursery smash rewards)
 """,
         encoding="utf-8",
     )
 
+    (SRC / "README.md").write_text(
+        """# Editable source for Dungeons & Dismemberment
+
+This repo ships a Vite-built game on `gh-pages`. The original app source is not in git; the playable core lives in `src/base-bundle.js` (snapshot of the last known-good r32 build).
+
+**Edit here, not the minified file by hand:**
+
+| Path | Purpose |
+| --- | --- |
+| `src/base-bundle.js` / `src/base-bundle.css` | Frozen game core (r32) |
+| `src/patches/build.py` | Applies r33–r35 patches |
+| `src/patches/dd-taunts-block.js` | Enemy spot/swing/death taunts + TTS |
+| `src/patches/draw-64bit.js` | 640×480 world buffer upscale |
+| `src/overlays/r34-awesome.css` | Title, pad, fantasy, blood-heat CSS |
+| `src/overlays/r35-feel.css` | Flesh & Thunder look pass |
+| `src/config/copy.json` | Title / select marketing copy |
+
+## Build
+
+```bash
+python3 src/patches/build.py
+```
+
+Writes hashed assets under `assets/`, and updates `index.html`, `sw.js`, and `manifest.webmanifest`.
+
+Serve locally:
+
+```bash
+python3 -m http.server 8765
+```
+""",
+        encoding="utf-8",
+    )
+
+    # Sanity: required r34/r35 markers must exist in output
+    checks = [
+        "BLOOD MOMENTUM",
+        "NURSERY SILENCED",
+        "blood-hot",
+        "low-hp",
+        "killStreak>=2",
+        "grunt:{hp:6,speed:66,dmg:15",
+        "(1+o*.055)*1.5",
+        "o!==`dot`&&o!==`aura`&&c>=1&&this.text",
+        "vol={master:.9,music:.32,sfx:1}",
+        "speed:144,melee:1.2,reach:4,pots:1",
+        "i.roll.t<.36",
+        "sc.l1.reach+i.reachAdd+72)",
+    ]
+    for c in checks:
+        if c not in out_js:
+            raise SystemExit(f"post-build check failed: missing {c!r}")
+    if "28eachAdd" in out_js or "r+28each" in out_js:
+        raise SystemExit("post-build check failed: mangled assist range")
+
     print(f"built assets/{js_name}")
     print(f"built assets/{css_name}")
     print("updated index.html sw.js manifest.webmanifest README.md")
+    print(f"build-id {BUILD_ID} ok ({len(checks)} checks)")
 
 
 if __name__ == "__main__":
