@@ -340,8 +340,8 @@ def main() -> None:
     )
     js = replace_once(
         js,
-        "assistTarget(o.x||o.y?Math.atan2(o.y,o.x):n.face,!!(o.x||o.y),d.some(Boolean)||f&&n.rskill!==`heavy`?260:sc.l1.reach+i.r",
-        "assistTarget(o.x||o.y?Math.atan2(o.y,o.x):n.face,!!(o.x||o.y),d.some(Boolean)||f&&n.rskill!==`heavy`?340:sc.l1.reach+i.r+28",
+        "assistTarget(o.x||o.y?Math.atan2(o.y,o.x):n.face,!!(o.x||o.y),d.some(Boolean)||f&&n.rskill!==`heavy`?260:sc.l1.reach+i.reachAdd+46)",
+        "assistTarget(o.x||o.y?Math.atan2(o.y,o.x):n.face,!!(o.x||o.y),d.some(Boolean)||f&&n.rskill!==`heavy`?360:sc.l1.reach+i.reachAdd+72)",
         "assist range",
     )
 
@@ -386,8 +386,8 @@ def main() -> None:
     )
     js = replace_once(
         js,
-        "splat(e=1){if(!this.ok(`splat`,.03))return;let t=this.t,n=O(.88,1.15);this.thump(t,105*n-e*14,28,.24+e*.08,.55+e*.12),this.nz(t,.28+e*.14,`lowpass`,1800*n,110,4,.42+e*.08),this.nz(t+.012,.2+e*.1,`bandpass`,780*n,220,8,.34),this.nz(t+.04,.16,`bandpass`,420*n,700,10,.1",
-        "splat(e=1){if(!this.ok(`splat`,.025))return;this.duck(.07+e*.04);let t=this.t,n=O(.88,1.15);this.thump(t,95*n-e*12,36,.3+e*.1,.68+e*.14),this.nz(t,.34+e*.16,`lowpass`,1600*n,100,4.5,.5+e*.1),this.nz(t+.01,.24+e*.12,`bandpass`,720*n,200,8,.4),this.nz(t+.035,.18,`bandpass`,400*n,650,10,.12",
+        "splat(e=1){if(!this.ok(`splat`,.03))return;let t=this.t,n=O(.88,1.15);this.thump(t,105*n-e*14,28,.24+e*.08,.55+e*.12),this.nz(t,.28+e*.14,`lowpass`,1800*n,110,4,.42+e*.08),this.nz(t+.012,.2+e*.1,`bandpass`,780*n,220,8,.34),this.nz(t+.04,.16,`bandpass`,420*n,700,10,.18)",
+        "splat(e=1){if(!this.ok(`splat`,.025))return;this.duck(.07+e*.04);let t=this.t,n=O(.88,1.15);this.thump(t,95*n-e*12,36,.3+e*.1,.68+e*.14),this.nz(t,.34+e*.16,`lowpass`,1600*n,100,4.5,.5+e*.1),this.nz(t+.01,.24+e*.12,`bandpass`,720*n,200,8,.4),this.nz(t+.035,.18,`bandpass`,400*n,650,10,.22)",
         "meaty splat",
     )
 
@@ -579,14 +579,17 @@ python3 -m http.server 8765
         "killStreak>=2",
         "grunt:{hp:6,speed:66,dmg:15",
         "(1+o*.055)*1.5",
-        "Math.max(1,Math.round(c))",
+        "o!==`dot`&&o!==`aura`&&c>=1&&this.text",
         "vol={master:.9,music:.32,sfx:1}",
         "speed:144,melee:1.2,reach:4,pots:1",
         "i.roll.t<.36",
+        "sc.l1.reach+i.reachAdd+72)",
     ]
     for c in checks:
         if c not in out_js:
             raise SystemExit(f"post-build check failed: missing {c!r}")
+    if "28eachAdd" in out_js or "r+28each" in out_js:
+        raise SystemExit("post-build check failed: mangled assist range")
 
     print(f"built assets/{js_name}")
     print(f"built assets/{css_name}")
