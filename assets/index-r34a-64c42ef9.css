@@ -447,8 +447,8 @@ html,body,#root,.app-shell{
 }
 
 
-/* === r33 polish overlay === */
-/* r33 play polish — title, arcade pad, body-horror identity, readability */
+/* === r34 abattoir ascension === */
+/* r34 — Abattoir Ascension: brand-first title, blood momentum chrome, wet motion */
 
 :root {
   --bile: #6a7a28;
@@ -456,29 +456,76 @@ html,body,#root,.app-shell{
   --abattoir: #7a1818;
   --wet: #2a4050;
   --brand: #e8c070;
+  --brand-hot: #ff9a4a;
   --ink: #0a0406;
+  --pulse: 0;
 }
 
-/* --- 1. Clean first screen --- */
-.title-card .keys {
-  display: none !important;
-}
+/* --- Brand-first title composition --- */
 .title-card {
-  width: min(420px, calc(100% - 28px));
-  padding: 26px 22px 20px;
+  width: min(440px, calc(100% - 24px));
+  padding: 30px 24px 22px;
   z-index: 40;
   background:
-    radial-gradient(at 50% 0%, rgba(122, 24, 24, 0.35), transparent 55%),
-    linear-gradient(180deg, #1a100e 0%, #0c0608 60%, #060304 100%);
-  border-color: #8a5030;
+    radial-gradient(ellipse at 50% -10%, rgba(184, 72, 40, 0.5), transparent 50%),
+    radial-gradient(ellipse at 80% 100%, rgba(106, 122, 40, 0.18), transparent 45%),
+    linear-gradient(165deg, #1c100e 0%, #0a0506 55%, #040203 100%);
+  border: 1px solid #8a5030;
+  box-shadow:
+    0 0 0 1px #1a080866,
+    0 24px 48px #000000aa,
+    inset 0 1px #d4a84a22;
+  animation: title-rise 0.9s ease-out both;
+}
+.title-card .brand,
+.title-card h1,
+.title-card .title,
+.title-card .arcade-title,
+.title-card .diablo-title {
+  font-size: clamp(1.55rem, 4.2vw, 2.15rem) !important;
+  letter-spacing: 0.12em !important;
+  line-height: 1.15 !important;
+  margin-bottom: 0.45em !important;
+  background: linear-gradient(180deg, #fff2d0 0%, #e8c070 38%, #c84828 78%, #6a1810 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent !important;
+  filter: drop-shadow(0 2px #0a0406) drop-shadow(0 0 18px #7a181866);
+  animation: brand-glow 3.6s ease-in-out infinite;
+}
+.title-card .sub {
+  color: rgba(220, 150, 130, 0.9);
+  font-family: "IM Fell English", Georgia, serif !important;
+  font-size: 1.05rem;
+  font-style: italic;
+  margin: 0.2em auto 0.65em;
+  max-width: 28ch;
+  animation: title-rise 1.05s ease-out both;
 }
 .title-card .blurb {
   max-width: 34ch;
-  margin-left: auto;
-  margin-right: auto;
+  margin: 0 auto 1.1em;
+  color: rgba(230, 210, 190, 0.78);
+  font-family: "IM Fell English", Georgia, serif !important;
+  line-height: 1.45;
+  animation: title-rise 1.2s ease-out both;
 }
-.title-card .sub {
-  color: rgba(200, 140, 120, 0.85);
+.title-card .start,
+.title-card .insert-coin,
+.title-card button.start {
+  animation: title-rise 1.35s ease-out both, cta-pulse 2.4s ease-in-out infinite;
+}
+.title-card .keys {
+  display: none !important;
+}
+
+.app-shell:has(.title-card) .title-atmo {
+  background:
+    radial-gradient(ellipse at 50% 35%, rgba(122, 24, 24, 0.55), transparent 52%),
+    radial-gradient(ellipse at 18% 85%, rgba(106, 122, 40, 0.22), transparent 42%),
+    radial-gradient(ellipse at 85% 70%, rgba(42, 64, 80, 0.28), transparent 38%),
+    #060304;
+  animation: atmo-breathe 8s ease-in-out infinite;
 }
 .app-shell:has(.title-card) .vpad,
 .app-shell:has(.diablo-select) .vpad,
@@ -488,14 +535,46 @@ html,body,#root,.app-shell{
   pointer-events: none !important;
   visibility: hidden;
 }
-.app-shell:has(.title-card) .title-atmo {
+
+/* --- Select: sinner ritual --- */
+.diablo-select {
   background:
-    radial-gradient(ellipse at 50% 40%, rgba(122, 24, 24, 0.45), transparent 55%),
-    radial-gradient(ellipse at 20% 80%, rgba(106, 122, 40, 0.18), transparent 45%),
-    radial-gradient(ellipse at 80% 70%, rgba(42, 64, 80, 0.22), transparent 40%);
+    radial-gradient(at 50% 25%, rgba(122, 24, 24, 0.5), transparent 55%),
+    radial-gradient(at 10% 90%, rgba(106, 122, 40, 0.15), transparent 40%),
+    #060408a8;
+}
+.arcade-select .arcade-title,
+.diablo-title.arcade-title {
+  background: linear-gradient(#fff0d0 0%, #e8c070 40%, #b84828 70%, #5a1010 100%);
+  filter: drop-shadow(0 2px #1a0808) drop-shadow(0 0 18px #7a181880);
+  letter-spacing: 0.14em;
+  -webkit-background-clip: text;
+  background-clip: text;
+}
+.class-detail .bio-name {
+  background: linear-gradient(#fff0d0, #e8c070 40%, #b84828 70%, #fff0d0);
+  filter: drop-shadow(0 2px #1a0808);
+  font-style: italic;
+}
+.diablo-sub,
+.insert-coin {
+  color: rgba(220, 180, 160, 0.82) !important;
+  font-family: "IM Fell English", Georgia, serif !important;
+  letter-spacing: 0.04em;
+}
+.insert-coin {
+  font-variant: normal !important;
+  text-transform: none !important;
+  font-size: 12px !important;
+}
+.bio-card,
+.bio-text,
+.bio-stats,
+.bio-flavor {
+  font-family: "IM Fell English", Georgia, serif !important;
 }
 
-/* --- 3. Arcade-primary thumb controls --- */
+/* --- Arcade pad (from r33, kept) --- */
 .vpad.arcade-primary .vpad-btn.face.B,
 .vpad.arcade-primary .vpad-btn.face.X,
 .vpad.arcade-primary .vpad-btn.face.U {
@@ -536,61 +615,82 @@ html,body,#root,.app-shell{
   border-color: #d4a84a;
 }
 
-/* --- 4. Combat readability --- */
+/* --- Combat readability + wet heat --- */
 .game-canvas {
-  /* slight contrast so wet floors don't swallow silhouettes */
-  filter: contrast(1.06) saturate(0.92);
+  filter: contrast(1.07) saturate(0.94);
+}
+.app-shell.blood-hot .game-canvas {
+  filter: contrast(1.1) saturate(1.05) drop-shadow(0 0 12px #7a181844);
+  animation: blood-heat 0.9s ease-in-out infinite alternate;
 }
 .hero-subs span {
   border-color: #a848288c;
   background: linear-gradient(#100404d0, #200808b0);
 }
 
-/* --- 5. Body-horror fantasy (tone down Capcom/Diablo chrome) --- */
-.arcade-select .arcade-title,
-.diablo-title.arcade-title {
-  background: linear-gradient(#e8c070 0%, #b84828 55%, #5a1010 100%);
-  filter: drop-shadow(0 2px #1a0808) drop-shadow(0 0 16px #7a181873);
-  letter-spacing: 0.14em;
-  -webkit-background-clip: text;
-  background-clip: text;
-}
-.diablo-select {
-  background:
-    radial-gradient(at 50% 30%, rgba(122, 24, 24, 0.45), transparent 55%),
-    #0604089e;
-}
-.diablo-sub,
-.insert-coin {
-  color: rgba(220, 180, 160, 0.78) !important;
-  font-family: "IM Fell English", Georgia, serif !important;
-  letter-spacing: 0.04em;
-}
-.insert-coin {
-  font-variant: normal !important;
-  text-transform: none !important;
-  font-size: 12px !important;
-}
-.bio-card,
-.bio-text,
-.bio-stats,
-.bio-flavor {
-  font-family: "IM Fell English", Georgia, serif !important;
-}
-.bio-text {
-  font-size: 14px;
-  line-height: 1.4;
-}
-.class-detail .bio-name {
-  background: linear-gradient(#fff0d0, #e8c070 40%, #b84828 70%, #fff0d0);
-  filter: drop-shadow(0 2px #1a0808);
-  font-style: italic;
-}
 .build-tag::after {
-  content: " · r33 polish";
+  content: " · r34 ascension";
+}
+
+@keyframes title-rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@keyframes brand-glow {
+  0%,
+  100% {
+    filter: drop-shadow(0 2px #0a0406) drop-shadow(0 0 14px #7a181855);
+  }
+  50% {
+    filter: drop-shadow(0 2px #0a0406) drop-shadow(0 0 26px #b8482888);
+  }
+}
+@keyframes cta-pulse {
+  0%,
+  100% {
+    transform: scale(1);
+    filter: brightness(1);
+  }
+  50% {
+    transform: scale(1.03);
+    filter: brightness(1.12);
+  }
+}
+@keyframes atmo-breathe {
+  0%,
+  100% {
+    filter: brightness(1);
+  }
+  50% {
+    filter: brightness(1.08);
+  }
+}
+@keyframes blood-heat {
+  from {
+    filter: contrast(1.08) saturate(1.02) drop-shadow(0 0 8px #7a181833);
+  }
+  to {
+    filter: contrast(1.12) saturate(1.08) drop-shadow(0 0 18px #b8482866);
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .title-card,
+  .title-card .brand,
+  .title-card .sub,
+  .title-card .blurb,
+  .title-card .start,
+  .title-card .insert-coin,
+  .app-shell:has(.title-card) .title-atmo,
+  .app-shell.blood-hot .game-canvas {
+    animation: none !important;
+  }
   .game-canvas {
     filter: none;
   }
