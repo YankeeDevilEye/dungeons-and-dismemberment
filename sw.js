@@ -1,13 +1,13 @@
 // Offline cache for Dungeons & Dismemberment (relative paths; works under /<repo>/ on GitHub Pages)
-const CACHE = 'dd-r32g-gross';
-const CORE = ["./","./assets/index-r32g-3b5d6939.css","./assets/index-r32g-630603c9.js","./icon-180.png","./icon-192.png","./icon-512.png","./icon-maskable-512.png","./icon.svg","./index.html","./manifest.webmanifest"]; // voice clips: cached on first play
+const CACHE = 'dd-r33p-polish';
+const CORE = ["./","./assets/index-r33p-642f4e75.css","./assets/index-r33p-78f4221c.js","./assets/pad-more.js","./icon-180.png","./icon-192.png","./icon-512.png","./icon-maskable-512.png","./icon.svg","./index.html","./manifest.webmanifest"]; // voice clips: cached on first play
 self.addEventListener('install', (e) => { e.waitUntil(caches.open(CACHE).then((c) => c.addAll(CORE)).then(() => self.skipWaiting())); });
 self.addEventListener('activate', (e) => { e.waitUntil(caches.keys().then((ks) => Promise.all(ks.filter((k) => k.startsWith('dd-') && k !== CACHE).map((k) => caches.delete(k)))).then(() => self.clients.claim())); });
 self.addEventListener('fetch', (e) => {
   const r = e.request;
   if (r.method !== 'GET') return;
   const u = new URL(r.url);
-  if (r.mode === 'navigate') { // network-first so new deploys show up; cached shell when offline
+  if (r.mode === 'navigate') {
     e.respondWith(fetch(r.url, { cache: 'no-cache', credentials: 'same-origin' }).then((res) => { const cp = res.clone(); caches.open(CACHE).then((c) => c.put('./', cp)); return res; }).catch(() => caches.match('./')));
     return;
   }
