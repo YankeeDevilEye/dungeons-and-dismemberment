@@ -11,8 +11,8 @@ This repo ships a Vite-built game on `gh-pages`. The original app source is not 
 | `src/patches/dd-taunts-block.js` | Enemy spot/swing/death taunts + TTS |
 | `src/patches/draw-64bit.js` | 640×480 world buffer upscale |
 | `src/overlays/r34-awesome.css` | Title, pad, fantasy, blood-heat CSS |
-| `src/overlays/r35-feel.css` | Flesh & Thunder look pass |
-| `src/config/copy.json` | Title / select marketing copy |
+| `src/overlays/r35-feel.css` | Flesh & Thunder look pass + select pin / crowded HUD |
+| `src/config/copy.json` | Title / select / controls copy |
 
 ## Build
 

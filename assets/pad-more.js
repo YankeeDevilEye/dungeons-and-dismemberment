@@ -3,14 +3,13 @@
     const btn = document.getElementById('pad-more');
     if (!btn) return;
     const sync = () => {
-      const vpad = document.querySelector('.vpad.touch, .vpad.arcade-primary');
+      const vpad = document.querySelector('.vpad');
       const menu = document.querySelector('.title-card, .diablo-select, .over-card, .char-select');
-      const playing = !!document.querySelector('.vpad') && !menu;
+      const playing = !!vpad && !menu;
       btn.hidden = !playing;
       btn.classList.toggle('touch-on', playing);
       if (!playing) {
-        const pad = document.querySelector('.vpad');
-        if (pad) pad.classList.remove('pad-expanded');
+        if (vpad) vpad.classList.remove('pad-expanded');
         btn.classList.remove('on');
         btn.textContent = 'More';
       }
