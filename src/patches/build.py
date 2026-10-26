@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parents[2]
 SRC = ROOT / "src"
 PATCHES = SRC / "patches"
 ASSETS = ROOT / "assets"
-BUILD_ID = "r35f"
+BUILD_ID = "r35g"
 
 PAD_MORE_JS = """\
 (function () {
@@ -21,14 +21,13 @@ PAD_MORE_JS = """\
     const btn = document.getElementById('pad-more');
     if (!btn) return;
     const sync = () => {
-      const vpad = document.querySelector('.vpad.touch, .vpad.arcade-primary');
+      const vpad = document.querySelector('.vpad');
       const menu = document.querySelector('.title-card, .diablo-select, .over-card, .char-select');
-      const playing = !!document.querySelector('.vpad') && !menu;
+      const playing = !!vpad && !menu;
       btn.hidden = !playing;
       btn.classList.toggle('touch-on', playing);
       if (!playing) {
-        const pad = document.querySelector('.vpad');
-        if (pad) pad.classList.remove('pad-expanded');
+        if (vpad) vpad.classList.remove('pad-expanded');
         btn.classList.remove('on');
         btn.textContent = 'More';
       }
@@ -172,6 +171,22 @@ def main() -> None:
         "arcade-primary class",
     )
 
+    # Title CTA: click as well as pointerdown (Enter already works)
+    js = replace_once(
+        js,
+        "className:`title-card diablo-frame`,onPointerDown:z,role:`dialog`",
+        "className:`title-card diablo-frame`,onPointerDown:z,onClick:z,role:`dialog`",
+        "title click start",
+    )
+
+    # Desktop pad AUTO bug: (ie||!0) always true — pad should follow touch only
+    js = replace_once(
+        js,
+        "le=ae===`on`||ae===`auto`&&(ie||!0)",
+        "le=ae===`on`||ae===`auto`&&ie",
+        "pad auto desktop",
+    )
+
     # --- r33: combat readability (lower gore) ---
     js = replace_once(js, "goreK=1;", "goreK=.55;", "goreK field init")
     js = replace_once(js, "this.goreK=1,", "this.goreK=.55,", "goreK reset")
@@ -183,6 +198,16 @@ def main() -> None:
         "u=(o?c?2.4:3.5:c?1.45:2.15)*l*(1+s*.7)",
         "u=(o?c?1.35:1.9:c?.85:1.15)*l*(1+s*.45)",
         "burst scale",
+    )
+
+    # Crowd-aware blood — keep hits readable when the floor is full
+    js = replace_once(
+        js,
+        "blood(e,t,n,r=0,i=0,a=1){let o=Math.round(n*2.05*this.goreK*(.4+.6*p.fx));",
+        "blood(e,t,n,r=0,i=0,a=1){let _en=0;try{for(let _e of this.enemies)_e&&!_e.dead&&_en++}catch(_x){}"
+        "let _crowd=_en>=12?.38:_en>=6?.58:1;"
+        "let o=Math.round(n*2.05*this.goreK*(.4+.6*p.fx)*_crowd);",
+        "crowd blood",
     )
 
     old_enemy = "drawEnemy(e,t,n){cc[t.kind];let r=t.r;if(t.meltT>0){"
@@ -399,12 +424,14 @@ def main() -> None:
         "r35 hit juice",
     )
 
-    # Low-HP DOM heat (with blood-hot)
+    # Low-HP DOM heat (with blood-hot) + crowded readability class
     js = replace_once(
         js,
         "try{let _s=document.querySelector(`.app-shell`);_s&&_s.classList.toggle(`blood-hot`,(this.killStreak|0)>=8)}catch(_e){}",
         "try{let _s=document.querySelector(`.app-shell`);if(_s){_s.classList.toggle(`blood-hot`,(this.killStreak|0)>=8);"
-        "let _h=this.hero;_s.classList.toggle(`low-hp`,!!(_h&&_h.maxHp>0&&_h.hp/_h.maxHp<.32&&this.phase===`play`))}}catch(_e){}",
+        "let _h=this.hero;_s.classList.toggle(`low-hp`,!!(_h&&_h.maxHp>0&&_h.hp/_h.maxHp<.32&&this.phase===`play`));"
+        "let _en=0;try{for(let _e of this.enemies)_e&&!_e.dead&&_en++}catch(_x){}"
+        "_s.classList.toggle(`crowded`,_en>=6&&this.phase===`play`)}}catch(_e){}",
         "low-hp class",
     )
 
@@ -532,6 +559,14 @@ Playable GitHub Pages build of an adult Gauntlet-style dungeon crawler (**r35 Fl
 - **Sound** — SFX-forward mix, meatier hits/swings/splats, music ducks under impact
 - **Play** — floating damage numbers, full-roll i-frames, wider aim assist, magnet loot, snappier movers
 - Keeps **r34 Blood Momentum** (streak power + nursery smash rewards)
+
+## r35g playtest polish
+
+- Title CTA is clickable; desk copy says Click / Enter
+- Character select pins Descend + confirm hint in-viewport
+- On-screen pad AUTO is off on desktop (`?desktop=1`)
+- Fuller desktop help (G / Tab / I / C / T / RMB / skills)
+- Crowded fights soften blood + low-HP veil for readability
 """,
         encoding="utf-8",
     )
@@ -550,8 +585,8 @@ This repo ships a Vite-built game on `gh-pages`. The original app source is not 
 | `src/patches/dd-taunts-block.js` | Enemy spot/swing/death taunts + TTS |
 | `src/patches/draw-64bit.js` | 640×480 world buffer upscale |
 | `src/overlays/r34-awesome.css` | Title, pad, fantasy, blood-heat CSS |
-| `src/overlays/r35-feel.css` | Flesh & Thunder look pass |
-| `src/config/copy.json` | Title / select marketing copy |
+| `src/overlays/r35-feel.css` | Flesh & Thunder look pass + select pin / crowded HUD |
+| `src/config/copy.json` | Title / select / controls copy |
 
 ## Build
 
@@ -576,6 +611,7 @@ python3 -m http.server 8765
         "NURSERY SILENCED",
         "blood-hot",
         "low-hp",
+        "crowded",
         "killStreak>=2",
         "grunt:{hp:6,speed:66,dmg:15",
         "(1+o*.055)*1.5",
@@ -584,6 +620,11 @@ python3 -m http.server 8765
         "speed:144,melee:1.2,reach:4,pots:1",
         "i.roll.t<.36",
         "sc.l1.reach+i.reachAdd+72)",
+        "onPointerDown:z,onClick:z",
+        "le=ae===`on`||ae===`auto`&&ie",
+        "_crowd=_en>=12",
+        "Click here or press Enter",
+        "Tab map · I inv · C char",
     ]
     for c in checks:
         if c not in out_js:
