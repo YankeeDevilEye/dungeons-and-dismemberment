@@ -504,7 +504,7 @@ def main() -> None:
     js = replace_once(
         js,
         "L:{...d(u,180),d:o},Y:{...d(u,206),d:o},U:{...d(u,232),d:o},SELECT:",
-        "L:{...d(u,180),d:o},Y:{...d(u,206),d:o},U:{...d(u,232),d:o},M:{...d(u,258),d:o},SELECT:",
+        "L:{...d(u,180),d:o},Y:{...d(u,206),d:o},U:{...d(u,232),d:o},M:{x:s-Math.round(i*.95),y:c-Math.round(i*.22),d:o},SELECT:",
         "pad magic touch layout",
     )
     js = replace_once(
@@ -819,7 +819,7 @@ python3 -m http.server 8765
         # r37 coin-up
         "M:`magic`",
         "[`M`,`✦`,null]",
-        "M:{...d(u,258),d:o}",
+        "M:{x:s-Math.round(i*.95),y:c-Math.round(i*.22),d:o}",
         "hpPool/1.2",
         "cd:q(2.6,4)",
         "callout(`CLEARED`",

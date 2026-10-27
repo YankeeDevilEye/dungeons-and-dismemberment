@@ -3,9 +3,11 @@
 /* Crystal dump face button — always visible (Gauntlet panic) */
 .vpad.arcade-primary .vpad-btn.face.M {
   display: grid !important;
+  opacity: 0.92 !important;
   border-color: #7cc8fff2;
-  background: radial-gradient(circle at 40% 35%, #7cc8ff55, #1a284866);
-  box-shadow: 0 0 0 1px #00000099, 0 0 14px #5aa0ff44, inset 0 0 12px #ffffff18;
+  border-width: 2.5px;
+  background: radial-gradient(circle at 40% 35%, #7cc8ff66, #1a284866);
+  box-shadow: 0 0 0 1px #00000099, 0 0 16px #5aa0ff55, inset 0 0 12px #ffffff22;
 }
 .vpad.arcade-primary .vpad-btn.face.M .vpad-glyph {
   color: #c8e8ff;
