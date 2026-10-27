@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Apply r33–r36 patches onto the frozen r32 base bundle.
+"""Apply r33–r37 patches onto the frozen r32 base bundle.
 
-r33 play-polish · r34 Abattoir Ascension · r35 Flesh & Thunder · r36 iframe integrity
+r33 play-polish · r34 Abattoir Ascension · r35 Flesh & Thunder · r36 iframe integrity · r37 coin-up crawl
 """
 from __future__ import annotations
 
@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parents[2]
 SRC = ROOT / "src"
 PATCHES = SRC / "patches"
 ASSETS = ROOT / "assets"
-BUILD_ID = "r36i"
+BUILD_ID = "r37"
 
 PAD_MORE_JS = """\
 (function () {
@@ -81,6 +81,8 @@ def main() -> None:
         (SRC / "overlays" / "r34-awesome.css").read_text()
         + "\n\n"
         + (SRC / "overlays" / "r35-feel.css").read_text()
+        + "\n\n"
+        + (SRC / "overlays" / "r37-feel.css").read_text()
     )
     draw64 = (PATCHES / "draw-64bit.js").read_text().strip()
     taunts = (PATCHES / "dd-taunts-block.js").read_text().strip()
@@ -485,6 +487,139 @@ def main() -> None:
         "champ bonus taken mul",
     )
 
+    # ========== r37 Coin-Up Crawl ==========
+    # Crystal dump on the thumb pad (was keyboard-only E/Q — dead loot on phone)
+    js = replace_once(
+        js,
+        "su={A:`attack`,B:`skill1`,X:`skill2`,Y:`quickHp`,L:`roll`,R:`rskill`,U:`ult`}",
+        "su={A:`attack`,B:`skill1`,X:`skill2`,Y:`quickHp`,L:`roll`,R:`rskill`,U:`ult`,M:`magic`}",
+        "pad magic map",
+    )
+    js = replace_once(
+        js,
+        "let ee=[[`A`,`⚔`,null],[`B`,`①`,_?i[0]??null:null],[`X`,`②`,_?i[1]??null:null],[`Y`,`♥`,null]]",
+        "let ee=[[`A`,`⚔`,null],[`B`,`①`,_?i[0]??null:null],[`X`,`②`,_?i[1]??null:null],[`Y`,`♥`,null],[`M`,`✦`,null]]",
+        "pad magic glyph",
+    )
+    js = replace_once(
+        js,
+        "L:{...d(u,180),d:o},Y:{...d(u,206),d:o},U:{...d(u,232),d:o},SELECT:",
+        "L:{...d(u,180),d:o},Y:{...d(u,206),d:o},U:{...d(u,232),d:o},M:{...d(u,258),d:o},SELECT:",
+        "pad magic touch layout",
+    )
+    js = replace_once(
+        js,
+        "U:{x:c-f*1.15,y:l-f*1.15,d:Math.round(44*a)},SELECT:",
+        "U:{x:c-f*1.15,y:l-f*1.15,d:Math.round(44*a)},M:{x:c+f*1.15,y:l-f*1.15,d:Math.round(44*a)},SELECT:",
+        "pad magic desk layout",
+    )
+
+    # Panic quaff — belt pots land as a save, not a drip
+    js = replace_once(
+        js,
+        "t.hpPool+=t.maxHp*n.power,t.hpRate=Math.max(t.hpRate,t.hpPool/2),this.text(t.x,t.y-24,`Glug.`,`#ff6a6a`,10,.7)",
+        "t.hpPool+=t.maxHp*n.power,t.hpRate=Math.max(t.hpRate,t.hpPool/1.2),t.inv=Math.max(t.inv,.28),"
+        "this.text(t.x,t.y-24,`+HEAL`,`#ff8a8a`,12,.85)",
+        "panic hp quaff",
+    )
+    js = replace_once(
+        js,
+        "t.mpPool+=t.maxMana*n.power,t.mpRate=Math.max(t.mpRate,t.mpPool/2),this.text(t.x,t.y-24,`Glug.`,`#7d8cff`,10,.7)",
+        "t.mpPool+=t.maxMana*n.power,t.mpRate=Math.max(t.mpRate,t.mpPool/1.2),"
+        "this.text(t.x,t.y-24,`+MANA`,`#9ab0ff`,12,.85)",
+        "panic mp quaff",
+    )
+
+    # Soft-start nurseries — first minutes teach smash-gen fantasy
+    js = replace_once(
+        js,
+        "cd:q(.3,1.2),flash:0,dead:!1,t:Math.random()*10",
+        "cd:q(2.6,4),flash:0,dead:!1,t:Math.random()*10",
+        "gen soft start cd",
+    )
+    js = replace_once(
+        js,
+        "o.wave<=0&&(o.wave=2+o.tier+Math.floor(n/3),o.waves=(o.waves??0)+1)",
+        "o.wave<=0&&(o.wave=(n<=1?1:2)+o.tier+Math.floor(n/3),o.waves=(o.waves??0)+1)",
+        "gen early wave size",
+    )
+    js = replace_once(
+        js,
+        "o.cd=o.wave>0?q(.7,1.1):Math.max(3.5,6-n*.3-o.tier*.5)*q(.85,1.15)",
+        "o.cd=o.wave>0?q(.7,1.1):Math.max(n<=1?4.8:3.8,6.5-n*.25-o.tier*.45)*q(.85,1.15)",
+        "gen rest cd",
+    )
+
+    # Room-clear visual beat (was voice-only)
+    js = replace_once(
+        js,
+        "this.vNear>=6&&s===0&&this.hv(`clear`),this.vNear=s===0?0:Math.max(this.vNear,s)",
+        "this.vNear>=6&&s===0&&(this.hv(`clear`),this.callout(`CLEARED`,`loot · smash nurseries`,`#9be36b`),"
+        "this.shake=Math.max(this.shake,4)),this.vNear=s===0?0:Math.max(this.vNear,s)",
+        "clear callout",
+    )
+
+    # Faster death → rise (Gauntlet coin-up rhythm)
+    js = replace_once(
+        js,
+        "this.phase===`dying`&&this.phaseT>2",
+        "this.phase===`dying`&&this.phaseT>1.15",
+        "dying duration",
+    )
+    js = replace_once(
+        js,
+        "e.inv=2.5,this.curseT=0",
+        "e.inv=3.2,this.curseT=0",
+        "respawn inv",
+    )
+    js = replace_once(
+        js,
+        "children:[`Rise at `,e.waypoints[e.lastWp]?.name??`the last waypoint`,` (Enter)`]",
+        "children:[`RISE · reclaim `,e.waypoints[e.lastWp]?.name??`waypoint`,` (Enter)`]",
+        "rise cta",
+    )
+
+    # Snappier crystal dump + drip heal so dump isn't a suicide commit
+    js = replace_once(
+        js,
+        "magic:{dur:1.1,a0:.42,a1:.43,reach:0,arc:0,dmg:0,kb:0,lunge:0,move:0}",
+        "magic:{dur:.7,a0:.16,a1:.2,reach:0,arc:0,dmg:0,kb:0,lunge:0,move:0}",
+        "magic windup",
+    )
+    js = replace_once(
+        js,
+        "e.pots=0,this.magicFx.push({x:e.x,y:e.y,t:0,pots:r,style:e.classId}),this.say(`${n.magicName}! ${ao(fo)} ×${r}`),this.shake=18,this.flash=.45;let i=5+r*4",
+        "e.pots=0,e.hp=Math.min(e.maxHp,e.hp+e.maxHp*(.03+.015*r)),e.inv=Math.max(e.inv,.35),"
+        "this.magicFx.push({x:e.x,y:e.y,t:0,pots:r,style:e.classId}),this.say(`${n.magicName}! ${ao(fo)} ×${r}`),"
+        "this.shake=18,this.flash=.45;let i=5+r*3.6",
+        "magic dump heal",
+    )
+
+    # Floor-0 coach + slightly longer entry inv on D1
+    js = replace_once(
+        js,
+        "this.banner={title:`${n.name} · Level ${this.level.index+1}`,line:`${this.level.name} — ${this.level.line}`,t:0},this.say(`${n.name} enters. ${n.flavor}`)",
+        "this.banner={title:`${n.name} · Level ${this.level.index+1}`,"
+        "line:this.level.index===0?`Hunger drains · eat meat · smash nurseries · Y drink · E/✦ dump crystals`:"
+        "`${this.level.name} — ${this.level.line}`,t:0},this.say(`${n.name} enters. ${n.flavor}`)",
+        "floor0 coach",
+    )
+    js = replace_once(
+        js,
+        "n.inv=1,n.keys=0;for(let e of t.gens)",
+        "n.inv=this.level.index<=0?2.2:1.35,n.keys=0;for(let e of t.gens)",
+        "entry inv",
+    )
+
+    # Empty belt tip points at crystals when you have them
+    js = replace_once(
+        js,
+        "return this.text(this.hero.x,this.hero.y-22,e===`hp`?`I need healing potions.`:`I need mana. Or a nap.`,`#9a948a`,11,1),!1",
+        "return this.text(this.hero.x,this.hero.y-22,e===`hp`?(this.hero.pots>0?`Dump crystals (E / ✦)!`:`I need healing potions.`):"
+        "`I need mana. Or a nap.`,`#9a948a`,11,1),!1",
+        "crystal tip",
+    )
+
     if "build-tag" in js:
         js = (
             js.replace("r32g", BUILD_ID, 1)
@@ -492,9 +627,10 @@ def main() -> None:
             .replace("r34a", BUILD_ID, 1)
             .replace("r35g", BUILD_ID, 1)
             .replace("r35f", BUILD_ID, 1)
+            .replace("r36i", BUILD_ID, 1)
         )
 
-    out_css = css + "\n\n/* === r34/r35 flesh & thunder === */\n" + overlay
+    out_css = css + "\n\n/* === r34/r35/r37 flesh & thunder === */\n" + overlay
     out_js = js
 
     js_hash = sha8(out_js.encode())
@@ -591,34 +727,29 @@ self.addEventListener('fetch', (e) => {{
     (ROOT / "README.md").write_text(
         """# Dungeons & Dismemberment
 
-Playable GitHub Pages build of an adult Gauntlet-style dungeon crawler (**r36 iframe integrity**).
+Playable GitHub Pages build of an adult Gauntlet-style dungeon crawler (**r37 coin-up crawl**).
 
 - **Play:** open this branch / Pages site (`?desktop=1` on desktop)
 - **Edit:** see [`src/README.md`](src/README.md) — patches + overlays are the source of truth
 - **Build:** `python3 src/patches/build.py`
 
+## r37 coin-up crawl
+
+- Crystal dump on the thumb pad (`✦` / E / Q) — no longer keyboard-only
+- Panic quaff heals snappier with a brief save-inv
+- Soft-start nurseries so the first minutes teach smash-gen fantasy
+- Room-clear callout + faster death→rise + stronger RISE CTA
+- Crystal dump windup shorter; dump drips a little HP + inv
+- Floor-0 coach banner; empty-heal tip points at crystals
+
 ## r36 iframe integrity
 
-- Full-roll i-frames actually cover bile, rot, reaper, and banshee peel (not just `hurtHero`)
-- Hazard ticks honor post-hit inv
-- Drown grapple pull/damage skips during roll / inv
-- Peel no longer strips bone armor in god mode
-- Champion Fire / Spectral chunks respect damage-taken mul
+- Full-roll i-frames cover bile, rot, reaper, peel, grapple
+- Hazard ticks honor post-hit inv; champ chunks respect taken mul
 
 ## r35 highlights
 
-- **Look** — wetter abattoir chrome, low-HP pulse, louder brand on title
-- **Sound** — SFX-forward mix, meatier hits/swings/splats, music ducks under impact
-- **Play** — floating damage numbers, full-roll i-frames, wider aim assist, magnet loot, snappier movers
-- Keeps **r34 Blood Momentum** (streak power + nursery smash rewards)
-
-## r35g playtest polish
-
-- Title CTA is clickable; desk copy says Click / Enter
-- Character select pins Descend + confirm hint in-viewport
-- On-screen pad AUTO is off on desktop (`?desktop=1`)
-- Fuller desktop help (G / Tab / I / C / T / RMB / skills)
-- Crowded fights soften blood + low-HP veil for readability
+- Wetter look, SFX-forward mix, damage numbers, aim assist, magnet loot, Blood Momentum
 """,
         encoding="utf-8",
     )
@@ -633,11 +764,12 @@ This repo ships a Vite-built game on `gh-pages`. The original app source is not 
 | Path | Purpose |
 | --- | --- |
 | `src/base-bundle.js` / `src/base-bundle.css` | Frozen game core (r32) |
-| `src/patches/build.py` | Applies r33–r36 patches |
+| `src/patches/build.py` | Applies r33–r37 patches |
 | `src/patches/dd-taunts-block.js` | Enemy spot/swing/death taunts + TTS |
 | `src/patches/draw-64bit.js` | 640×480 world buffer upscale |
 | `src/overlays/r34-awesome.css` | Title, pad, fantasy, blood-heat CSS |
 | `src/overlays/r35-feel.css` | Flesh & Thunder look pass + select pin / crowded HUD |
+| `src/overlays/r37-feel.css` | Crystal pad, low-HP heal pulse, rise CTA |
 | `src/config/copy.json` | Title / select / controls copy |
 
 ## Build
@@ -657,7 +789,7 @@ python3 -m http.server 8765
         encoding="utf-8",
     )
 
-    # Sanity: required r34/r35/r36 markers must exist in output
+    # Sanity: required r34/r35/r36/r37 markers must exist in output
     checks = [
         "BLOOD MOMENTUM",
         "NURSERY SILENCED",
@@ -684,6 +816,18 @@ python3 -m http.server 8765
         "phase===`play`&&!this.god&&!(r.inv>0||r.roll&&r.roll.t<.36)",
         ")<50&&!(t.inv>0||t.roll&&t.roll.t<.36)&&",
         "(e.mods().dmgTakenMul||1)",
+        # r37 coin-up
+        "M:`magic`",
+        "[`M`,`✦`,null]",
+        "M:{...d(u,258),d:o}",
+        "hpPool/1.2",
+        "cd:q(2.6,4)",
+        "callout(`CLEARED`",
+        "phaseT>1.15",
+        "e.inv=3.2",
+        "magic:{dur:.7,a0:.16,a1:.2",
+        "Dump crystals (E / ✦)!",
+        "smash nurseries · Y drink",
     ]
     for c in checks:
         if c not in out_js:
