@@ -447,7 +447,7 @@ html,body,#root,.app-shell{
 }
 
 
-/* === r34/r35 flesh & thunder === */
+/* === r34/r35/r37 flesh & thunder === */
 /* r34 — Abattoir Ascension: brand-first title, blood momentum chrome, wet motion */
 
 :root {
@@ -971,6 +971,80 @@ html,body,#root,.app-shell{
   .app-shell:has(.title-card) .title-atmo,
   .title-card h1,
   .title-card .brand {
+    animation: none !important;
+  }
+}
+
+
+/* r37 Coin-Up Crawl — crystal dump on pad, panic heal, soft-start, rise */
+
+/* Crystal dump face button — always visible (Gauntlet panic) */
+.vpad.arcade-primary .vpad-btn.face.M {
+  display: grid !important;
+  opacity: 0.92 !important;
+  border-color: #7cc8fff2;
+  border-width: 2.5px;
+  background: radial-gradient(circle at 40% 35%, #7cc8ff66, #1a284866);
+  box-shadow: 0 0 0 1px #00000099, 0 0 16px #5aa0ff55, inset 0 0 12px #ffffff22;
+}
+.vpad.arcade-primary .vpad-btn.face.M .vpad-glyph {
+  color: #c8e8ff;
+  text-shadow: 0 0 8px #7cc8ffaa, 0 1px 2px #000;
+}
+.vpad.arcade-primary .vpad-btn.face.M.on {
+  background: radial-gradient(circle at 40% 35%, #a0dcff88, #28487866);
+  box-shadow: 0 0 0 1px #00000099, 0 0 22px #7cc8ffaa, inset 0 0 14px #fff6;
+}
+
+/* Low-HP: pulse heal (Y) so the lifeline reads under pressure */
+.app-shell.low-hp .vpad.arcade-primary .vpad-btn.face.Y {
+  animation: 0.9s ease-in-out infinite alternate r37-heal-pulse;
+  border-color: #ff8a8af2;
+}
+@keyframes r37-heal-pulse {
+  from {
+    box-shadow: 0 0 0 1px #0000008c, 0 0 10px #ff505055, inset 0 0 10px #ffffff14;
+  }
+  to {
+    box-shadow: 0 0 0 1px #0000008c, 0 0 22px #ff6060cc, inset 0 0 14px #ffc8c844;
+    transform: scale(1.04);
+  }
+}
+
+/* Rise CTA — eager coin-up */
+.over-card button:not(.ghost) {
+  letter-spacing: 0.14em;
+  animation: 1.2s ease-in-out infinite alternate r37-rise-glow;
+  box-shadow:
+    inset 0 1px #ffe6a059,
+    0 3px #0c080a,
+    0 0 22px #b4283c66;
+}
+@keyframes r37-rise-glow {
+  from {
+    filter: brightness(1);
+  }
+  to {
+    filter: brightness(1.12);
+    box-shadow:
+      inset 0 1px #ffe6a073,
+      0 3px #0c080a,
+      0 0 28px #e0405066;
+  }
+}
+
+/* Soft clear flash via callout chrome (callout is canvas; toast/hint polish) */
+.toast {
+  border-color: #7aaa58;
+}
+
+.build-tag::after {
+  content: " · r37 coin-up crawl";
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-shell.low-hp .vpad.arcade-primary .vpad-btn.face.Y,
+  .over-card button:not(.ghost) {
     animation: none !important;
   }
 }
