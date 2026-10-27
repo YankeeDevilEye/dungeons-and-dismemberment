@@ -1,10 +1,18 @@
 # Dungeons & Dismemberment
 
-Playable GitHub Pages build of an adult Gauntlet-style dungeon crawler (**r35 Flesh & Thunder**).
+Playable GitHub Pages build of an adult Gauntlet-style dungeon crawler (**r36 iframe integrity**).
 
 - **Play:** open this branch / Pages site (`?desktop=1` on desktop)
 - **Edit:** see [`src/README.md`](src/README.md) — patches + overlays are the source of truth
 - **Build:** `python3 src/patches/build.py`
+
+## r36 iframe integrity
+
+- Full-roll i-frames actually cover bile, rot, reaper, and banshee peel (not just `hurtHero`)
+- Hazard ticks honor post-hit inv
+- Drown grapple pull/damage skips during roll / inv
+- Peel no longer strips bone armor in god mode
+- Champion Fire / Spectral chunks respect damage-taken mul
 
 ## r35 highlights
 

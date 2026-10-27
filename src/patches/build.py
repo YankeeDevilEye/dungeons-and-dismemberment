@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Apply r33–r35 patches onto the frozen r32 base bundle.
+"""Apply r33–r36 patches onto the frozen r32 base bundle.
 
-r33 play-polish · r34 Abattoir Ascension · r35 Flesh & Thunder
+r33 play-polish · r34 Abattoir Ascension · r35 Flesh & Thunder · r36 iframe integrity
 """
 from __future__ import annotations
 
@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parents[2]
 SRC = ROOT / "src"
 PATCHES = SRC / "patches"
 ASSETS = ROOT / "assets"
-BUILD_ID = "r35g"
+BUILD_ID = "r36i"
 
 PAD_MORE_JS = """\
 (function () {
@@ -443,11 +443,55 @@ def main() -> None:
         "streak heat music",
     )
 
+    # ========== r36 iframe integrity ==========
+    # r35 extended hurtHero roll iframes to .36 but left hazard paths on .28
+    # while the roll itself ends at .32 — dodge felt broken in bile / rot / peel.
+
+    js = replace_once(
+        js,
+        "tileAt(Math.floor(n.x/32),Math.floor(n.y/32))===6&&!e.god&&!(n.roll&&n.roll.t<.28)&&(n.hp-=(16+r*2.5)*t,e.lastHurtBy=`a boiling bile soak`,n.hurtFlash=Math.max(n.hurtFlash,.08),Math.random()<.3&&e.sparks(n.x,n.y,2,`#ff7a2a`))",
+        "tileAt(Math.floor(n.x/32),Math.floor(n.y/32))===6&&!e.god&&!(n.inv>0||n.roll&&n.roll.t<.36)&&(n.hp-=(16+r*2.5)*t,e.lastHurtBy=`a boiling bile soak`,n.hurtFlash=Math.max(n.hurtFlash,.08),Math.random()<.3&&e.sparks(n.x,n.y,2,`#ff7a2a`))",
+        "bile roll+inv",
+    )
+    js = replace_once(
+        js,
+        "o.kind===`drown`&&r&&Math.hypot(t.x-o.x,t.y-o.y)<70&&(this.god,!this.god&&t.inv<=0&&!(t.roll&&t.roll.t<.28)&&(t.hp-=3.5*e,Math.random()<.04&&this.text(t.x,t.y-12,`Rot`,`#6a9a4a`,9,.4)))",
+        "o.kind===`drown`&&r&&Math.hypot(t.x-o.x,t.y-o.y)<70&&(!this.god&&t.inv<=0&&!(t.roll&&t.roll.t<.36)&&(t.hp-=3.5*e,Math.random()<.04&&this.text(t.x,t.y-12,`Rot`,`#6a9a4a`,9,.4)))",
+        "rot roll iframe",
+    )
+    js = replace_once(
+        js,
+        "o.kind===`reaper`&&c<T+2)!this.god&&!(t.roll&&t.roll.t<.28)&&(t.hp-=(26+n*2)*e,t.hurtFlash=.1,this.lastHurtBy=cc.reaper.name,Math.random()<.3&&this.blood(t.x,t.y,1,i,s,.4))",
+        "o.kind===`reaper`&&c<T+2)!this.god&&!(t.inv>0||t.roll&&t.roll.t<.36)&&(t.hp-=(26+n*2)*e,t.hurtFlash=.1,this.lastHurtBy=cc.reaper.name,Math.random()<.3&&this.blood(t.x,t.y,1,i,s,.4))",
+        "reaper roll+inv",
+    )
+    js = replace_once(
+        js,
+        "peelHero(e,t,n){let r=this.hero;if(this.phase===`play`&&!(!this.god&&(r.inv>0||r.roll&&r.roll.t<.28))){r.boneArmor=0,r.skinPeel=Math.max(r.skinPeel,1.6),this.god||this.hurtHero(e,cc.banshee.name,t,n);",
+        "peelHero(e,t,n){let r=this.hero;if(this.phase===`play`&&!this.god&&!(r.inv>0||r.roll&&r.roll.t<.36)){r.boneArmor=0,r.skinPeel=Math.max(r.skinPeel,1.6),this.hurtHero(e,cc.banshee.name,t,n);",
+        "peel roll+god gate",
+    )
+    js = replace_once(
+        js,
+        "o.kind===`drown`&&o.grappleT>0&&r)Math.hypot(t.x-o.x,t.y-o.y)<50&&(t.x+=(o.x-t.x)*Math.min(1,2.2*e),t.y+=(o.y-t.y)*Math.min(1,2.2*e),this.god||(t.hp-=6*e));",
+        "o.kind===`drown`&&o.grappleT>0&&r)Math.hypot(t.x-o.x,t.y-o.y)<50&&!(t.inv>0||t.roll&&t.roll.t<.36)&&(t.x+=(o.x-t.x)*Math.min(1,2.2*e),t.y+=(o.y-t.y)*Math.min(1,2.2*e),this.god||(t.hp-=6*e));",
+        "grapple roll+inv",
+    )
+    # Champ on-hit chunks still land after a real hit, but respect taken mul
+    js = replace_once(
+        js,
+        "a===`Fire Enchanted`?(e.god||(r.hp-=3+i),e.sparks(r.x,r.y,4,`#ff7a2a`)):a===`Spectral Hit`&&(e.god||(r.hp-=n*.3),e.sparks(r.x,r.y,5,ao([`#ff7a2a`,`#9fd8ff`,`#e8f4ff`])))}",
+        "a===`Fire Enchanted`?(e.god||(r.hp-=(3+i)*(e.mods().dmgTakenMul||1)),e.sparks(r.x,r.y,4,`#ff7a2a`)):a===`Spectral Hit`&&(e.god||(r.hp-=n*.3*(e.mods().dmgTakenMul||1)),e.sparks(r.x,r.y,5,ao([`#ff7a2a`,`#9fd8ff`,`#e8f4ff`])))}",
+        "champ bonus taken mul",
+    )
+
     if "build-tag" in js:
         js = (
             js.replace("r32g", BUILD_ID, 1)
             .replace("r33p", BUILD_ID, 1)
             .replace("r34a", BUILD_ID, 1)
+            .replace("r35g", BUILD_ID, 1)
+            .replace("r35f", BUILD_ID, 1)
         )
 
     out_css = css + "\n\n/* === r34/r35 flesh & thunder === */\n" + overlay
@@ -547,11 +591,19 @@ self.addEventListener('fetch', (e) => {{
     (ROOT / "README.md").write_text(
         """# Dungeons & Dismemberment
 
-Playable GitHub Pages build of an adult Gauntlet-style dungeon crawler (**r35 Flesh & Thunder**).
+Playable GitHub Pages build of an adult Gauntlet-style dungeon crawler (**r36 iframe integrity**).
 
 - **Play:** open this branch / Pages site (`?desktop=1` on desktop)
 - **Edit:** see [`src/README.md`](src/README.md) — patches + overlays are the source of truth
 - **Build:** `python3 src/patches/build.py`
+
+## r36 iframe integrity
+
+- Full-roll i-frames actually cover bile, rot, reaper, and banshee peel (not just `hurtHero`)
+- Hazard ticks honor post-hit inv
+- Drown grapple pull/damage skips during roll / inv
+- Peel no longer strips bone armor in god mode
+- Champion Fire / Spectral chunks respect damage-taken mul
 
 ## r35 highlights
 
@@ -581,7 +633,7 @@ This repo ships a Vite-built game on `gh-pages`. The original app source is not 
 | Path | Purpose |
 | --- | --- |
 | `src/base-bundle.js` / `src/base-bundle.css` | Frozen game core (r32) |
-| `src/patches/build.py` | Applies r33–r35 patches |
+| `src/patches/build.py` | Applies r33–r36 patches |
 | `src/patches/dd-taunts-block.js` | Enemy spot/swing/death taunts + TTS |
 | `src/patches/draw-64bit.js` | 640×480 world buffer upscale |
 | `src/overlays/r34-awesome.css` | Title, pad, fantasy, blood-heat CSS |
@@ -605,7 +657,7 @@ python3 -m http.server 8765
         encoding="utf-8",
     )
 
-    # Sanity: required r34/r35 markers must exist in output
+    # Sanity: required r34/r35/r36 markers must exist in output
     checks = [
         "BLOOD MOMENTUM",
         "NURSERY SILENCED",
@@ -625,12 +677,21 @@ python3 -m http.server 8765
         "_crowd=_en>=12",
         "Click here or press Enter",
         "Tab map · I inv · C char",
+        # r36 integrity
+        "!(n.inv>0||n.roll&&n.roll.t<.36)",
+        "!(t.inv>0||t.roll&&t.roll.t<.36)&&(t.hp-=(26+n*2)*e",
+        "t.roll.t<.36)&&(t.hp-=3.5*e",
+        "phase===`play`&&!this.god&&!(r.inv>0||r.roll&&r.roll.t<.36)",
+        ")<50&&!(t.inv>0||t.roll&&t.roll.t<.36)&&",
+        "(e.mods().dmgTakenMul||1)",
     ]
     for c in checks:
         if c not in out_js:
             raise SystemExit(f"post-build check failed: missing {c!r}")
     if "28eachAdd" in out_js or "r+28each" in out_js:
         raise SystemExit("post-build check failed: mangled assist range")
+    if "roll.t<.28" in out_js:
+        raise SystemExit("post-build check failed: leftover roll.t<.28")
 
     print(f"built assets/{js_name}")
     print(f"built assets/{css_name}")
