@@ -1,10 +1,16 @@
 # Dungeons & Dismemberment
 
-Playable GitHub Pages build of an adult Gauntlet-style dungeon crawler (**r37 coin-up crawl**).
+Playable GitHub Pages build of an adult Gauntlet-style dungeon crawler (**r38 portrait Safari**).
 
-- **Play:** open this branch / Pages site (`?desktop=1` on desktop)
+- **Play:** open this branch / Pages site (`?desktop=1` on desktop). Phone Safari works in portrait.
 - **Edit:** see [`src/README.md`](src/README.md) — patches + overlays are the source of truth
 - **Build:** `python3 src/patches/build.py`
+
+## r38 portrait Safari
+
+- Removed landscape-only **TURN THE DEVICE** gate that blocked all taps in portrait
+- Manifest orientation is `any` — play portrait or landscape on phone
+- Virtual pad + Descend work without rotating the phone
 
 ## r37 coin-up crawl
 

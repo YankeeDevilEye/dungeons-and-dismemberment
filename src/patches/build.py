@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
-"""Apply r33–r37 patches onto the frozen r32 base bundle.
+"""Apply r33–r38 patches onto the frozen r32 base bundle.
 
-r33 play-polish · r34 Abattoir Ascension · r35 Flesh & Thunder · r36 iframe integrity · r37 coin-up crawl
+r33 play-polish · r34 Abattoir Ascension · r35 Flesh & Thunder · r36 iframe integrity · r37 coin-up crawl · r38 portrait Safari
 """
 from __future__ import annotations
 
@@ -13,7 +13,7 @@ ROOT = Path(__file__).resolve().parents[2]
 SRC = ROOT / "src"
 PATCHES = SRC / "patches"
 ASSETS = ROOT / "assets"
-BUILD_ID = "r37"
+BUILD_ID = "r38"
 
 PAD_MORE_JS = """\
 (function () {
@@ -620,6 +620,16 @@ def main() -> None:
         "crystal tip",
     )
 
+    # ========== r38 Portrait Safari ==========
+    # Phone-first pad is portrait-native; the landscape-only gate bricked Safari
+    # (TURN THE DEVICE overlay ate every tap — select, Descend, stick, attack).
+    js = replace_once(
+        js,
+        "[Ae,je]=(0,l.useState)(()=>ie&&Ia().portrait);(0,l.useEffect)(()=>{if(!ie)return;let n=!1,r=()=>{let r=Ia().portrait;je(r),r&&e.phase===`play`&&!e.paused?(e.paused=!0,n=!0,t.reset(),s(!0)):!r&&n&&(n=!1,e.phase===`play`&&!e.skillTreeOpen&&!e.invOpen&&!e.charOpen&&!e.relicOpen&&!e.wpOpen&&(e.paused=!1,s(!1)))};r();let i=()=>{screen.orientation?.lock?.(`landscape`).catch(()=>void 0)},a=La(r);window.addEventListener(`pointerdown`,i,{once:!0});let o=window.setInterval(r,1e3);return()=>{a(),window.removeEventListener(`pointerdown`,i),window.clearInterval(o)}},[ie,e,t]);",
+        "[Ae,je]=(0,l.useState)(!1);(0,l.useEffect)(()=>{/* r38: portrait play allowed — no rotate lock */},[ie,e,t]);",
+        "portrait rotate lock off",
+    )
+
     if "build-tag" in js:
         js = (
             js.replace("r32g", BUILD_ID, 1)
@@ -628,9 +638,10 @@ def main() -> None:
             .replace("r35g", BUILD_ID, 1)
             .replace("r35f", BUILD_ID, 1)
             .replace("r36i", BUILD_ID, 1)
+            .replace("r37", BUILD_ID, 1)
         )
 
-    out_css = css + "\n\n/* === r34/r35/r37 flesh & thunder === */\n" + overlay
+    out_css = css + "\n\n/* === r34/r35/r37/r38 flesh & thunder === */\n" + overlay
     out_js = js
 
     js_hash = sha8(out_js.encode())
@@ -705,7 +716,7 @@ self.addEventListener('fetch', (e) => {{
         "start_url": "./",
         "scope": "./",
         "display": "fullscreen",
-        "orientation": "landscape",
+        "orientation": "any",
         "background_color": "#12060a",
         "theme_color": "#12060a",
         "icons": [
@@ -727,11 +738,17 @@ self.addEventListener('fetch', (e) => {{
     (ROOT / "README.md").write_text(
         """# Dungeons & Dismemberment
 
-Playable GitHub Pages build of an adult Gauntlet-style dungeon crawler (**r37 coin-up crawl**).
+Playable GitHub Pages build of an adult Gauntlet-style dungeon crawler (**r38 portrait Safari**).
 
-- **Play:** open this branch / Pages site (`?desktop=1` on desktop)
+- **Play:** open this branch / Pages site (`?desktop=1` on desktop). Phone Safari works in portrait.
 - **Edit:** see [`src/README.md`](src/README.md) — patches + overlays are the source of truth
 - **Build:** `python3 src/patches/build.py`
+
+## r38 portrait Safari
+
+- Removed landscape-only **TURN THE DEVICE** gate that blocked all taps in portrait
+- Manifest orientation is `any` — play portrait or landscape on phone
+- Virtual pad + Descend work without rotating the phone
 
 ## r37 coin-up crawl
 
@@ -764,7 +781,7 @@ This repo ships a Vite-built game on `gh-pages`. The original app source is not 
 | Path | Purpose |
 | --- | --- |
 | `src/base-bundle.js` / `src/base-bundle.css` | Frozen game core (r32) |
-| `src/patches/build.py` | Applies r33–r37 patches |
+| `src/patches/build.py` | Applies r33–r38 patches |
 | `src/patches/dd-taunts-block.js` | Enemy spot/swing/death taunts + TTS |
 | `src/patches/draw-64bit.js` | 640×480 world buffer upscale |
 | `src/overlays/r34-awesome.css` | Title, pad, fantasy, blood-heat CSS |
@@ -828,6 +845,9 @@ python3 -m http.server 8765
         "magic:{dur:.7,a0:.16,a1:.2",
         "Dump crystals (E / ✦)!",
         "smash nurseries · Y drink",
+        # r38 portrait
+        "[Ae,je]=(0,l.useState)(!1)",
+        "r38: portrait play allowed",
     ]
     for c in checks:
         if c not in out_js:
@@ -836,6 +856,10 @@ python3 -m http.server 8765
         raise SystemExit("post-build check failed: mangled assist range")
     if "roll.t<.28" in out_js:
         raise SystemExit("post-build check failed: leftover roll.t<.28")
+    if "je(r),r&&e.phase===`play`" in out_js:
+        raise SystemExit("post-build check failed: portrait pause lock still present")
+    if "orientation?.lock?.(`landscape`)" in out_js:
+        raise SystemExit("post-build check failed: landscape orientation.lock still present")
 
     print(f"built assets/{js_name}")
     print(f"built assets/{css_name}")
